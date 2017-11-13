@@ -37,7 +37,6 @@ import gradle_clojure.plugin.tasks.ClojureCompile;
 public class ClojurePlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
-    // XXX cannot compile non-android project now.
     if (project.getPlugins().hasPlugin("com.android.application")) {
       project.getPlugins().apply(ClojureBaseAndroidPlugin.class);
     } else {
