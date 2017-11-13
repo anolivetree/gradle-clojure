@@ -78,13 +78,13 @@ public class ClojureCompile extends AbstractCompile {
   @Override
   @TaskAction
   public void compile() {
-    if (!getProject().delete(getDestinationDir())) {
-      throw new GradleException("Cannot clean destination directory: " + getDestinationDir().getAbsolutePath());
-    }
+    //if (!getProject().delete(getDestinationDir())) {
+    //  throw new GradleException("Cannot clean destination directory: " + getDestinationDir().getAbsolutePath());
+    //}
 
-    if (!getDestinationDir().mkdirs()) {
-      throw new GradleException("Cannot create destination directory: " + getDestinationDir().getAbsolutePath());
-    }
+    //if (!getDestinationDir().mkdirs()) {
+    //  throw new GradleException("Cannot create destination directory: " + getDestinationDir().getAbsolutePath());
+    //}
 
     if (options.isCopySourceSetToOutput()) {
       getProject().copy(spec -> {
