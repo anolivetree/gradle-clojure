@@ -102,24 +102,35 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
         }
 
         System.out.printf("compiler.name %s\n", variant.getJavaCompiler().getName());
-        System.out.printf("compile.name %s\n", variant.getJavaCompile().getName());
+        System.out.printf("compile_.name %s\n", variant.getJavaCompile().getName());
 
         String compileTaskName = javaCompile.getName().replaceFirst("Java.*$", "Clojure");
         //String compileTaskName = "compile" + variant.getName() + "Clojure";
         ClojureCompile compile = project.getTasks().create(compileTaskName, ClojureCompile.class);
         compile.setDescription(String.format("Compiles the %s Clojure source.", variant.getName()));
 
+        System.out.printf("var.java.classpath\n");
+        for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
+          System.out.printf(" %s\n", f.getAbsolutePath());
+        }
+        compile.setClasspath(variant.getJavaCompile().getClasspath().plus(project.files(app.getBootClasspath())));
+        System.out.printf("var.java.classpath\n");
+        for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
+          System.out.printf(" %s\n", f.getAbsolutePath());
+        }
+
         // TODO presumably at some point this will allow providers, so we should switch to that
         // instead of convention mapping
-        compile.getConventionMapping().map("classpath", variant.getJavaCompile()::getClasspath);
+        //compile.getConventionMapping().map("classpath", variant.getJavaCompile()::getClasspath);
         // TODO switch to provider
         compile.getConventionMapping().map("namespaces", compile::findNamespaces);
 
         compile.getOptions().setAotCompile(true);
 
         //clojureSourceSet.getClojure().setOutputDir();
+        System.out.printf("javacompile.destinationdir %s\n", javaCompile.getDestinationDir().getAbsolutePath());
         compile.setDestinationDir(javaCompile.getDestinationDir());
-        compile.dependsOn(javaCompile);
+        //compile.dependsOn(javaCompile);
 
         for (SourceProvider provider : variant.getSourceSets()) {
           ClojureSourceSet sourceSet = (ClojureSourceSet) ((HasConvention)provider).getConvention().getPlugins().get("clojure");
@@ -129,6 +140,7 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
           compile.setSource(sourceSet.getClojure());
         }
 
+        javaCompile.finalizedBy(compile);
         variant.getAssemble().dependsOn(compile);
       });
     });
