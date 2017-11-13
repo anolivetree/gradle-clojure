@@ -45,16 +45,20 @@ public class ClojureBasePlugin implements Plugin<Project> {
   }
 
   private void configureSourceSetDefaults(Project project) {
-    project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(sourceSet -> {
+    project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(sourceSet -> { // sourceSetは、mainとかtestを表す。
+      // clojureのソースコード一覧を作成
       ClojureSourceSet clojureSourceSet = new DefaultClojureSourceSet("clojure", sourceDirectorySetFactory);
       new DslObject(sourceSet).getConvention().getPlugins().put("clojure", clojureSourceSet);
 
+      System.out.printf("sourceSet.getName()=%s\n", sourceSet.getName()); // main, test,
       clojureSourceSet.getClojure().srcDir(String.format("src/%s/clojure", sourceSet.getName()));
       // in case the clojure source overlaps with the resources source, exclude any clojure code
       // from resources
       sourceSet.getResources().getFilter().exclude(element -> clojureSourceSet.getClojure().contains(element.getFile()));
       sourceSet.getAllSource().source(clojureSourceSet.getClojure());
 
+      // compileタスクを作成。名称は、compileClojure, compileTestClojure
+      System.out.printf("compileTaskName=%s\n", sourceSet.getCompileTaskName("clojure")); // compileClojure, compileTestClojure
       String compileTaskName = sourceSet.getCompileTaskName("clojure");
       ClojureCompile compile = project.getTasks().create(compileTaskName, ClojureCompile.class);
       compile.setDescription(String.format("Compiles the %s Clojure source.", sourceSet.getName()));
@@ -68,6 +72,8 @@ public class ClojureBasePlugin implements Plugin<Project> {
 
       SourceSetUtil.configureOutputDirectoryForSourceSet(sourceSet, clojureSourceSet.getClojure(), compile, project);
 
+      // classを作るタスクを、compileタスクにdependさせる
+      System.out.printf("classesTaskName=%s\n", sourceSet.getClassesTaskName()); // classes, testClasses
       project.getTasks().getByName(sourceSet.getClassesTaskName()).dependsOn(compile);
     });
   }

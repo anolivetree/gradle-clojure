@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.android.build.gradle.AppPlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -36,11 +37,16 @@ import gradle_clojure.plugin.tasks.ClojureCompile;
 public class ClojurePlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
-    project.getPlugins().apply(ClojureBasePlugin.class);
-    project.getPlugins().apply(JavaPlugin.class);
+    // XXX cannot compile non-android project now.
+    if (project.getPlugins().hasPlugin("com.android.application")) {
+      project.getPlugins().apply(ClojureBaseAndroidPlugin.class);
+    } else {
+      project.getPlugins().apply(ClojureBasePlugin.class);
+      project.getPlugins().apply(JavaPlugin.class);
 
-    JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-    configureTestDefaults(project, javaConvention);
+      JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+      configureTestDefaults(project, javaConvention);
+    }
   }
 
   private void configureTestDefaults(Project project, JavaPluginConvention javaConvention) {

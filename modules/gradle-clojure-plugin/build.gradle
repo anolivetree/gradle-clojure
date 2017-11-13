@@ -14,6 +14,7 @@ dependencies {
   // clojure runtime
   compileOnly 'org.clojure:clojure:1.8.0'
   compileOnly 'org.projectodd.shimdandy:shimdandy-api:1.2.0'
+  compile 'com.android.tools.build:gradle:3.0.0'
 
   // compat testing
   compatTestCompile gradleTestKit()

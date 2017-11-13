@@ -32,7 +32,7 @@ import org.gradle.workers.WorkerExecutor;
 
 public class ClojureWorkerExecutor {
   private static final String SHIMDANDY_VERSION = "1.2.0";
-  private static final String GRADLE_CLOJURE_VERSION = getVersion();
+  private static final String GRADLE_CLOJURE_VERSION = "0.3.0-rc.2";//getVersion();
 
   private final Project project;
   private final WorkerExecutor workerExecutor;
