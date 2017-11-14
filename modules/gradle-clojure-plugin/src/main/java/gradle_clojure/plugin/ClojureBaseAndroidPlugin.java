@@ -29,6 +29,7 @@ import gradle_clojure.plugin.tasks.ClojureSourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.SourceDirectorySet;
@@ -36,6 +37,7 @@ import org.gradle.api.internal.HasConvention;
 import org.gradle.api.internal.file.SourceDirectorySetFactory;
 import org.gradle.api.internal.plugins.DslObject;
 import org.gradle.api.internal.tasks.DefaultSourceSetOutput;
+import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
 import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -46,6 +48,7 @@ import org.gradle.internal.Cast;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public class ClojureBaseAndroidPlugin implements Plugin<Project> {
@@ -140,12 +143,25 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
           compile.setSource(sourceSet.getClojure());
         }
 
-        javaCompile.finalizedBy(compile);
-        variant.getAssemble().dependsOn(compile);
+        //variant.getPackageApplication().
+        //System.out.printf("prebuild " + variant.getPreBuild().getName() + "\n");
+        //Set<? extends Task> deps = javaCompile.getTaskDependencies()..getDependencies(variant.getAssemble());
+        for (Object obj : variant.getAssemble().getDependsOn()) {
+          System.out.printf(" dependon " + obj + "\n");
+        }
+        Task transformTasks = project.getTasksByName("transformClassesWithDexFor"
+          + variant.getName().substring(0,1).toUpperCase()
+          + variant.getName().substring(1), false)
+          .iterator().next();
+        //System.out.printf("transformTask=" + transformTasks.iterator().next() + "\n");
+        //javaCompile.finalizedBy(compile);
+        transformTasks.dependsOn(compile);
+        //variant.getJavaCompiler().finalizedBy(compile);
+        //variant.getAssemble().dependsOn(compile);
       });
     });
-
   }
+
 
   // iterate with sourceSets
   private void configureSourceSetDefaults_test(Project project) {
