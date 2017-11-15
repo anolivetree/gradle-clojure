@@ -170,32 +170,11 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
         //javaCompile.finalizedBy(compile);
         transformTask.dependsOn(compile);
         //variant.getJavaCompiler().finalizedBy(compile);
-        //variant.getAssemble().dependsOn(compile);
 
-        ClojureBytecodeAddTask addBytecodeTask = project.getTasks().create(compileTaskName + "ByteCode", ClojureBytecodeAddTask.class);
-        addBytecodeTask.set(project, variant, compile);
-        compile.finalizedBy(addBytecodeTask);
+        variant.registerPostJavacGeneratedBytecode(compile.getOutputs().getFiles());
+        //compile.finalizedBy(addBytecodeTask);
       });
     });
-  }
-
-  static public class ClojureBytecodeAddTask extends DefaultTask {
-    private Project project;
-    private ApplicationVariant variant;
-    private ClojureCompile compile;
-
-    public void set (Project project, ApplicationVariant variant, ClojureCompile compile) {
-      this.project = project;
-      this.variant = variant;
-      this.compile = compile;
-    }
-
-    @TaskAction
-    public void action() {
-      System.out.printf("bytecode action\n");
-      variant.registerPostJavacGeneratedBytecode(compile.getOutputs().getFiles());
-    }
-
   }
 
   // iterate with sourceSets
