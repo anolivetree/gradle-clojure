@@ -69,7 +69,7 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
     // sourceSetsは、full, fullDebug, andoridTestFullなど、flavorもbuildTypeも別々のも組み合わせのも取れる
     app.getSourceSets().all(sourceSets -> {
 
-      System.out.printf("sourceSet %s\n", sourceSets.getName());
+      //System.out.printf("sourceSet %s\n", sourceSets.getName());
 
       File sourceSetPath = project.file("src/" + sourceSets.getName() + "/clojure");
       if (!sourceSetPath.exists()) {
@@ -80,7 +80,7 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
       ClojureSourceSet clojureSourceSet = new DefaultClojureSourceSet("clojure", sourceDirectorySetFactory);
       //new DslObject(sourceSet).getConvention().getPlugins().put("clojure", clojureSourceSet);
       clojureSourceSet.getClojure().srcDir("src/" + sourceSets.getName() + "/clojure");
-      System.out.printf("srcdir %s\n", "src/" + sourceSets.getName() + "/clojure");
+      //System.out.printf("srcdir %s\n", "src/" + sourceSets.getName() + "/clojure");
 
       ((HasConvention)sourceSets).getConvention().getPlugins().put("clojure", clojureSourceSet);
 
@@ -91,33 +91,21 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
     project.afterEvaluate(project1 -> {
       app.getApplicationVariants().all(variant -> {
 
-
-        System.out.printf("variant %s\n", variant.getName());
+        //System.out.printf("variant %s\n", variant.getName());
 
         JavaCompile javaCompile = variant.getJavaCompile();
         if (javaCompile == null) {
           return;
         }
 
-        System.out.printf("compiler.name %s\n", variant.getJavaCompiler().getName());
-        System.out.printf("compile_.name %s\n", variant.getJavaCompile().getName());
-
         String compileTaskName = javaCompile.getName().replaceFirst("Java.*$", "Clojure");
-        //String compileTaskName = "compile" + variant.getName() + "Clojure";
         ClojureCompile compile = project.getTasks().create(compileTaskName, ClojureCompile.class);
         compile.setDescription(String.format("Compiles the %s Clojure source.", variant.getName()));
 
-        System.out.printf("var.java.classpath\n");
-        for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
-          System.out.printf(" %s\n", f.getAbsolutePath());
-        }
-        compile.setClasspath(variant.getJavaCompile().getClasspath().plus(project.files(app.getBootClasspath()))
+        compile.setClasspath(variant.getJavaCompile().getClasspath()
+          .plus(project.files(app.getBootClasspath()))
           .plus(project.files(javaCompile.getDestinationDir()))
         );
-        System.out.printf("var.java.classpath\n");
-        for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
-          System.out.printf(" %s\n", f.getAbsolutePath());
-        }
 
         // TODO presumably at some point this will allow providers, so we should switch to that
         // instead of convention mapping
@@ -127,15 +115,7 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
 
         compile.getOptions().setAotCompile(true);
 
-        //clojureSourceSet.getClojure().setOutputDir();
-        System.out.printf("javacompile.destinationdir %s\n", javaCompile.getDestinationDir().getAbsolutePath());
-        if (false) {
-          compile.setDestinationDir(javaCompile.getDestinationDir());
-          compile.dependsOn(javaCompile);
-        } else {
-          System.out.printf("####################\n");
-          compile.setDestinationDir(new File(project.getBuildDir() + "/intermediates/classes_clojure/" + variant.getName()));
-        }
+        compile.setDestinationDir(new File(project.getBuildDir() + "/intermediates/classes_clojure/" + variant.getName()));
 
         for (SourceProvider provider : variant.getSourceSets()) {
           ClojureSourceSet sourceSet = (ClojureSourceSet) ((HasConvention)provider).getConvention().getPlugins().get("clojure");
@@ -145,34 +125,8 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
           compile.setSource(sourceSet.getClojure());
         }
 
-        //variant.getPackageApplication().
-        //System.out.printf("prebuild " + variant.getPreBuild().getName() + "\n");
-        //Set<? extends Task> deps = javaCompile.getTaskDependencies()..getDependencies(variant.getAssemble());
-        for (Object obj : variant.getAssemble().getDependsOn()) {
-          System.out.printf(" dependon " + obj + "\n");
-        }
-
-        String captName = variant.getName().substring(0,1).toUpperCase() + variant.getName().substring(1);
-
-
-        Set<Task> transformTasks;
-        System.out.printf("transformName=" + "transformClassesWithDexFor" + captName + "\n");
-        transformTasks = project.getTasksByName("transformClassesWithDexFor" + captName, true);
-        if (transformTasks.isEmpty()) {
-          transformTasks = project.getTasksByName("transformClassesWithDexBuilderFor" + captName, true);
-        }
-        if (transformTasks.isEmpty()) {
-          transformTasks = project.getTasksByName("transformClassesWithPreDexFor" + captName, true);
-        }
-
-        Task transformTask = transformTasks.iterator().next();
-        System.out.printf("transformTask=" + transformTask.getClass() + "\n");
-        //javaCompile.finalizedBy(compile);
-        transformTask.dependsOn(compile);
-        //variant.getJavaCompiler().finalizedBy(compile);
-
+        variant.getJavaCompiler().finalizedBy(compile);
         variant.registerPostJavacGeneratedBytecode(compile.getOutputs().getFiles());
-        //compile.finalizedBy(addBytecodeTask);
       });
     });
   }
