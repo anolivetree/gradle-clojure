@@ -17,19 +17,13 @@ package gradle_clojure.plugin;
 
 
 import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.api.AndroidSourceDirectorySet;
-import com.android.build.gradle.api.AndroidSourceSet;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.api.*;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import gradle_clojure.plugin.internal.DefaultClojureSourceSet;
 import gradle_clojure.plugin.tasks.ClojureCompile;
 import gradle_clojure.plugin.tasks.ClojureSourceSet;
-import org.gradle.api.Action;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
+import org.gradle.api.*;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.SourceDirectorySet;
@@ -42,6 +36,7 @@ import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.internal.SourceSetUtil;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.Cast;
@@ -116,7 +111,9 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
         for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
           System.out.printf(" %s\n", f.getAbsolutePath());
         }
-        compile.setClasspath(variant.getJavaCompile().getClasspath().plus(project.files(app.getBootClasspath())));
+        compile.setClasspath(variant.getJavaCompile().getClasspath().plus(project.files(app.getBootClasspath()))
+          .plus(project.files(javaCompile.getDestinationDir()))
+        );
         System.out.printf("var.java.classpath\n");
         for (File f : variant.getJavaCompile().getClasspath().getFiles()) {
           System.out.printf(" %s\n", f.getAbsolutePath());
@@ -132,8 +129,13 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
 
         //clojureSourceSet.getClojure().setOutputDir();
         System.out.printf("javacompile.destinationdir %s\n", javaCompile.getDestinationDir().getAbsolutePath());
-        compile.setDestinationDir(javaCompile.getDestinationDir());
-        //compile.dependsOn(javaCompile);
+        if (false) {
+          compile.setDestinationDir(javaCompile.getDestinationDir());
+          compile.dependsOn(javaCompile);
+        } else {
+          System.out.printf("####################\n");
+          compile.setDestinationDir(new File(project.getBuildDir() + "/intermediates/classes_clojure/" + variant.getName()));
+        }
 
         for (SourceProvider provider : variant.getSourceSets()) {
           ClojureSourceSet sourceSet = (ClojureSourceSet) ((HasConvention)provider).getConvention().getPlugins().get("clojure");
@@ -149,19 +151,52 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
         for (Object obj : variant.getAssemble().getDependsOn()) {
           System.out.printf(" dependon " + obj + "\n");
         }
-        Task transformTasks = project.getTasksByName("transformClassesWithDexFor"
-          + variant.getName().substring(0,1).toUpperCase()
-          + variant.getName().substring(1), false)
-          .iterator().next();
-        //System.out.printf("transformTask=" + transformTasks.iterator().next() + "\n");
+
+        String captName = variant.getName().substring(0,1).toUpperCase() + variant.getName().substring(1);
+
+
+        Set<Task> transformTasks;
+        System.out.printf("transformName=" + "transformClassesWithDexFor" + captName + "\n");
+        transformTasks = project.getTasksByName("transformClassesWithDexFor" + captName, true);
+        if (transformTasks.isEmpty()) {
+          transformTasks = project.getTasksByName("transformClassesWithDexBuilderFor" + captName, true);
+        }
+        if (transformTasks.isEmpty()) {
+          transformTasks = project.getTasksByName("transformClassesWithPreDexFor" + captName, true);
+        }
+
+        Task transformTask = transformTasks.iterator().next();
+        System.out.printf("transformTask=" + transformTask.getClass() + "\n");
         //javaCompile.finalizedBy(compile);
-        transformTasks.dependsOn(compile);
+        transformTask.dependsOn(compile);
         //variant.getJavaCompiler().finalizedBy(compile);
         //variant.getAssemble().dependsOn(compile);
+
+        ClojureBytecodeAddTask addBytecodeTask = project.getTasks().create(compileTaskName + "ByteCode", ClojureBytecodeAddTask.class);
+        addBytecodeTask.set(project, variant, compile);
+        compile.finalizedBy(addBytecodeTask);
       });
     });
   }
 
+  static public class ClojureBytecodeAddTask extends DefaultTask {
+    private Project project;
+    private ApplicationVariant variant;
+    private ClojureCompile compile;
+
+    public void set (Project project, ApplicationVariant variant, ClojureCompile compile) {
+      this.project = project;
+      this.variant = variant;
+      this.compile = compile;
+    }
+
+    @TaskAction
+    public void action() {
+      System.out.printf("bytecode action\n");
+      variant.registerPostJavacGeneratedBytecode(compile.getOutputs().getFiles());
+    }
+
+  }
 
   // iterate with sourceSets
   private void configureSourceSetDefaults_test(Project project) {
