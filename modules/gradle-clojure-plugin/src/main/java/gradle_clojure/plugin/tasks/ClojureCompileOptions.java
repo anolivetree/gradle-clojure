@@ -24,7 +24,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 
-public final class ClojureCompileOptions implements Serializable {
+public class ClojureCompileOptions implements Serializable {
   private final ClojureForkOptions forkOptions = new ClojureForkOptions();
 
   private boolean aotCompile = false;

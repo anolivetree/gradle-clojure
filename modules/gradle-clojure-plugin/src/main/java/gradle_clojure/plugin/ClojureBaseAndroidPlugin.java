@@ -22,6 +22,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import gradle_clojure.plugin.internal.DefaultClojureSourceSet;
 import gradle_clojure.plugin.tasks.ClojureCompile;
+import gradle_clojure.plugin.tasks.ClojureCompileOptions;
 import gradle_clojure.plugin.tasks.ClojureSourceSet;
 import org.gradle.api.*;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -38,6 +39,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.internal.SourceSetUtil;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.AbstractCompile;
+import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.Cast;
 
@@ -57,6 +59,8 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
     project.getPluginManager().apply(JavaBasePlugin.class);
+
+    project.getExtensions().create("clojure", ClojureCompileOptions.class);
 
     configureSourceSetDefaults(project);
   }
@@ -113,6 +117,11 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
         // TODO switch to provider
         compile.getConventionMapping().map("namespaces", compile::findNamespaces);
 
+        ClojureCompileOptions options = project.getExtensions().findByType(ClojureCompileOptions.class);
+        compile.getOptions().setDirectLinking(options.isDirectLinking());
+        compile.getOptions().setDisableLocalsClearing(options.isDisableLocalsClearing());
+        compile.getOptions().setElideMeta(options.getElideMeta());
+        compile.getOptions().setReflectionWarnings(options.getReflectionWarnings());
         compile.getOptions().setAotCompile(true);
 
         compile.setDestinationDir(new File(project.getBuildDir() + "/intermediates/classes_clojure/" + variant.getName()));
