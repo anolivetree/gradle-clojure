@@ -85,7 +85,7 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
       ((HasConvention)sourceSets).getConvention().getPlugins().put("clojure", clojureSourceSet);
 
       // add so Android Studio will recognize Clojure files can see these
-      //sourceSets.getJava().srcDir(sourceSetPath);
+      sourceSets.getJava().srcDir(sourceSetPath);
     });
 
     project.afterEvaluate(project1 -> {
