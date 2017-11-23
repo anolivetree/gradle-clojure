@@ -124,9 +124,11 @@ public class ClojureCompile extends AbstractCompile {
 
   public List<String> findNamespaces() {
     Set<String> roots = getSourceRoots();
-    return StreamSupport.stream(getSource().spliterator(), false)
+    List<String> ret = StreamSupport.stream(getSource().spliterator(), false)
         .map(it -> findNamespace(it, roots))
         .collect(Collectors.toList());
+    ret.add("clojure.core");
+    return ret;
   }
 
   private String findNamespace(File file, Set<String> roots) {
