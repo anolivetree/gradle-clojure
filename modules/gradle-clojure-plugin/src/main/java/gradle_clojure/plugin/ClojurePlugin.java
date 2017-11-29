@@ -37,8 +37,6 @@ import org.gradle.api.tasks.testing.Test;
 import gradle_clojure.plugin.tasks.ClojureCompile;
 import gradle_clojure.plugin.tasks.ClojureNRepl;
 
-import com.android.build.gradle.AppPlugin;
-
 public class ClojurePlugin implements Plugin<Project> {
   private static final String DEV_SOURCE_SET_NAME = "dev";
 
