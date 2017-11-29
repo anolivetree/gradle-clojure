@@ -45,6 +45,7 @@ import org.gradle.internal.Cast;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -227,8 +228,11 @@ public class ClojureBaseAndroidPlugin implements Plugin<Project> {
       // instead of convention mapping
       compile.getConventionMapping().map("classpath", variant.getJavaCompile()::getClasspath);
       // TODO switch to provider
-      compile.getConventionMapping().map("namespaces", compile::findNamespaces);
-
+      compile.getConventionMapping().map("namespaces", (Callable<List<String>>) () -> {
+        List<String> ns = compile.findNamespaces();
+        ns.add("clojure.core");
+        return ns;
+      });
       //clojureSourceSet.getClojure().setOutputDir();
       compile.setDestinationDir(new File(project.getBuildDir() + "/classes/" + variant.getName()));
 
