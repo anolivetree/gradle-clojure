@@ -44,7 +44,11 @@ public class ClojurePlugin implements Plugin<Project> {
 
   @Override
   public void apply(Project project) {
-    if (project.getPlugins().hasPlugin("com.android.application")) {
+    String[] androidPluginList = new String[] {
+      "android", "com.android.application", "android-library", "com.android.library",
+      "com.android.test", "com.android.feature",
+    };
+    if (Stream.of(androidPluginList).anyMatch(s -> project.getPlugins().hasPlugin(s))) {
       project.getPlugins().apply(ClojureBaseAndroidPlugin.class);
     } else {
       project.getPlugins().apply(ClojureBasePlugin.class);
