@@ -1,6 +1,6 @@
 plugins {
   id 'org.ajoberstar.grgit' version '2.0.0'
-  id 'org.ajoberstar.reckon' version '0.2.1'
+//  id 'org.ajoberstar.reckon' version '0.2.1'
   id 'com.diffplug.gradle.spotless' version '3.6.0'
 
   id 'gradle-clojure.clojure' version '0.3.0-rc.3' apply false
@@ -8,10 +8,12 @@ plugins {
   id 'com.gradle.plugin-publish' version '0.9.9' apply false
 }
 
+/*
 reckon {
   normal = scopeFromProp()
   preRelease = stageFromProp('milestone', 'rc', 'final')
 }
+*/
 
 allprojects {
   apply plugin: 'com.diffplug.gradle.spotless'
